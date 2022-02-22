@@ -5,6 +5,10 @@ const MD_UNDERLINE_REGEX = /__(.*?)__/g
 const MD_STRIKETHROUGH_REGEX = /~~(.*?)~~/g
 const URL_REGEX = /(https?:\/\/.+?(?=\s|$))/g
 const USER_MENTION_REGEX = /(&lt;@!?(\d+)&gt;)/
+const MD_CODE1_REGEX = /`(.+?)`/
+const MD_CODE2_REGEX = /``(.+?)``/
+const MD_CODE3_REGEX = /```([^]+?)```/
+const MD_CODE4_REGEX = /```(.*?)[\n ]([^]+?)```/
 
 const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
     .replaceAll('&', '&amp;')
@@ -14,6 +18,18 @@ const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
     .replaceAll("'", '&#039;')
 
 const postProcessMessage = message => {
+    if (MD_CODE4_REGEX.test(message)) {
+        message = message.replace(MD_CODE4_REGEX, '<div class="code">$2</div>')
+    }
+    if (MD_CODE3_REGEX.test(message)) {
+        message = message.replace(MD_CODE3_REGEX, '<div class="code">$1</div>')
+    }
+    if (MD_CODE2_REGEX.test(message)) {
+        message = message.replace(MD_CODE2_REGEX, '<span class="code">$1</span>')
+    }
+    if (MD_CODE1_REGEX.test(message)) {
+        message = message.replace(MD_CODE1_REGEX, '<span class="code">$1</span>')
+    }
     message.match(URL_REGEX)?.forEach((url) => {
         message = message.replace(url, `<a href="${encodeURI(url)}">${escapeHtml(url)}</a>`)
         if (url.endsWith(".png")) {

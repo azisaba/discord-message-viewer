@@ -1,6 +1,5 @@
 body {
   padding: 50px;
-  /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;*/
   font-family: Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -18,7 +17,6 @@ h2.message-header>span.message-username {
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
-  -ms-flex-negative: 0;
 }
 
 div.message {
@@ -118,4 +116,22 @@ span.mention {
   border-radius: 3px;
   padding: 0 2px;
   font-weight: 500;
+}
+
+span.code {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 3px 5px;
+  border-radius: 5px;
+}
+
+div.code {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid #20222f;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.code {
+  font-family: Consolas, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono,
+      Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Monaco, Courier New, Courier, monospace;
 }
