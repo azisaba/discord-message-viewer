@@ -21,7 +21,7 @@ router.get('/messages/list', function(req, res) {
 })
 
 router.get('/messages/:table/:channel_id', function(req, res) {
-  if (!/^[a-zA-Z_0-9]+$/.test(String(req.params.table))) {
+  if (!/^[a-zA-Z0-9_\-]+$/.test(String(req.params.table))) {
     return res.status(400).send({ error: "invalid table name" })
   }
   if (!/^[0-9]+$/.test(String(req.params.channel_id))) {
