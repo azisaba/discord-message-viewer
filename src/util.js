@@ -1,11 +1,10 @@
-const twemoji = require('twemoji')
-
 const MD_URL_REGEX = /\[(.*?)]\((.*?)\)/g
 const MD_BOLD_REGEX = /\*\*(.*?)\*\*/g
 const MD_ITALIC_REGEX = /(\*(.*?)\*)|(_(.*?)_)/g
 const MD_UNDERLINE_REGEX = /__(.*?)__/g
 const MD_STRIKETHROUGH_REGEX = /~~(.*?)~~/g
 const URL_REGEX = /(https?:\/\/.+?(?=\s|$))/g
+const USER_MENTION_REGEX = /(&lt;@!?(\d+)&gt;)/
 
 const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
     .replaceAll('&', '&amp;')
@@ -16,12 +15,12 @@ const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
 
 const postProcessMessage = message => {
     message.match(URL_REGEX)?.forEach((url) => {
-        message = message.replace(url, `<a href="${encodeURI(url)}">${url}</a>`)
+        message = message.replace(url, `<a href="${encodeURI(url)}">${escapeHtml(url)}</a>`)
         if (url.endsWith(".png")) {
             message += `\n<a href="${encodeURI(url)}"><img src="${encodeURI(url)}" alt="Image"/></a>`
         }
     })
-    return twemoji.parse(message)
+    return message
 }
 
 module.exports.getContentTypeFromExtension = o => {
@@ -61,13 +60,15 @@ module.exports.processAttachments = attachments => {
 
 /**
  * @param {string} message
+ * @param {any[]} results
  */
-module.exports.processMessage = message => {
+module.exports.processMessage = (message, results) => {
     let result = ''
     let pending = ''
     for (let i = 0; i < message.length; i++) {
         const char = message.charAt(i)
         pending += escapeHtml(char)
+        // skip if char is number and not last char
         if (/\d/.test(char) && i !== (message.length - 1)) continue
         // the order is *VERY* important!
         if (MD_URL_REGEX.test(pending)) {
@@ -99,6 +100,19 @@ module.exports.processMessage = message => {
             pending = pending.replace(MD_STRIKETHROUGH_REGEX, '<s>$1</s>')
             result += pending
             pending = ''
+        }
+        if (USER_MENTION_REGEX.test(pending)) {
+            const exec = USER_MENTION_REGEX.exec(pending)
+            if (exec) {
+                const userId = exec[2]
+                const msg = results.find((e) => e.author_id === userId)
+                if (msg) {
+                    result += `<span class="mention" title="${escapeHtml(msg.author_name)}#${msg.author_discriminator} (ID: ${userId})">@${escapeHtml(msg.author_name)}</span>`
+                } else {
+                    result += `<span class="mention" title="(ID: ${userId})">${pending}</span>`
+                }
+                pending = ''
+            }
         }
     }
     result += pending

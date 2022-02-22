@@ -1,7 +1,6 @@
 const express = require('express')
-const twemoji = require('twemoji')
 const { query } = require('../src/sql')
-const { processMessage, processAttachments, escapeHtml, getContentTypeFromExtension } = require('../src/util')
+const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 
 router.get('/messages/:table/:channel_id', function(req, res, next) {
@@ -20,12 +19,14 @@ router.get('/messages/:table/:channel_id', function(req, res, next) {
       const fileAttachments = (await query(`SELECT \`message_id\`, \`attachment_id\`, \`url\` FROM \`attachments\` WHERE (${where}) AND LOWER(\`url\`) NOT LIKE "%.png"`, ...messageIds)).results
       results.forEach((e) => e.attachments = [...imageAttachments, ...fileAttachments].filter((attachment) => attachment.message_id === e.message_id))
     }
-    results.forEach((e) => e.content = processMessage(e.content))
+    results.forEach((e) => e.content = processMessage(e.content, results))
     results.forEach((e) => e.content += processAttachments(e.attachments))
-    results.forEach((e) => e.author_name = twemoji.parse(escapeHtml(e.author_name)))
     results.forEach((e) => e.content = e.content.replace(/^\n?(.*)\n?$/, "$1"))
     res.render('index', { data: results });
-  }).catch(() => res.status(404).send({ error: 'not_found' }))
+  }).catch(e => {
+    console.error(e.stack || e)
+    res.status(404).send({ error: 'not_found' })
+  })
 })
 
 router.get('/attachments/:attachment_id', function(req, res, next) {

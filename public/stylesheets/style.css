@@ -121,3 +121,11 @@ img.emoji {
   margin: 0 .05em 0 .1em;
   vertical-align: -0.1em;
 }
+
+span.mention {
+  background-color: hsla(235, 85.6%, 64.7%, 0.35);
+  color: hsl(236, 83.3%, 92.9%);
+  border-radius: 3px;
+  padding: 0 2px;
+  font-weight: 500;
+}
