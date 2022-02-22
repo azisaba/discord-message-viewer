@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  each val in data
+    div.message
+      div.contents
+        h2.message-header
+          span.message-username(title=`${val.author_name}#${val.author_discriminator}`) !{val.author_name}
+          if val.author_is_bot === '1'
+            span.bot BOT
+          i.separator
+          span.message-timestamp= (new Date(val.created_timestamp)).toLocaleString()
+        div.message-content !{val.content}

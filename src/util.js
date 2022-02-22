@@ -1,0 +1,106 @@
+const twemoji = require('twemoji')
+
+const MD_URL_REGEX = /\[(.*?)]\((.*?)\)/g
+const MD_BOLD_REGEX = /\*\*(.*?)\*\*/g
+const MD_ITALIC_REGEX = /(\*(.*?)\*)|(_(.*?)_)/g
+const MD_UNDERLINE_REGEX = /__(.*?)__/g
+const MD_STRIKETHROUGH_REGEX = /~~(.*?)~~/g
+const URL_REGEX = /(https?:\/\/.+?(?=\s|$))/g
+
+const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+
+const postProcessMessage = message => {
+    message.match(URL_REGEX)?.forEach((url) => {
+        message = message.replace(url, `<a href="${encodeURI(url)}">${url}</a>`)
+        if (url.endsWith(".png")) {
+            message += `\n<a href="${encodeURI(url)}"><img src="${encodeURI(url)}" alt="Image"/></a>`
+        }
+    })
+    return twemoji.parse(message)
+}
+
+module.exports.getContentTypeFromExtension = o => {
+    const s = String(o)
+    if (s.endsWith('.png')) return 'image/png'
+    if (s.endsWith('.jpeg')) return 'image/jpeg'
+    if (s.endsWith('.jpg')) return 'image/jpg'
+    if (s.endsWith('.gif')) return 'image/gif'
+    if (s.endsWith('.mpeg') || s.endsWith('.mp3')) return 'audio/mpeg'
+    if (s.endsWith('.mp4')) return 'video/mp4'
+    if (s.endsWith('.midi') || s.endsWith('.mid')) return 'audio/midi'
+    if (s.endsWith('.pdf')) return 'application/pdf'
+    if (s.endsWith('.txt')) return 'text/plain'
+    if (s.endsWith('.wav')) return 'audio/wav'
+    if (s.endsWith('.weba')) return 'audio/webm'
+    if (s.endsWith('.webm')) return 'video/webm'
+    if (s.endsWith('.webp')) return 'image/webp'
+    if (s.endsWith('.csv')) return 'text/csv'
+    if (s.endsWith('.css')) return 'text/css'
+    return 'application/octet-stream'
+}
+
+module.exports.processAttachments = attachments => {
+    const html = []
+    attachments.forEach((attachment) => {
+        if (attachment.url.endsWith('.png') === true) {
+            html.push(`<img src="data:image/png;base64,${Buffer.from(attachment.data).toString('base64')}" alt="Image" />`)
+        } else {
+            const split = attachment.url.split('/')
+            const fileName = split[split.length - 1]
+            html.push(`<a href="/attachments/${attachment.attachment_id}">[${fileName}] をダウンロード</a>`)
+        }
+    })
+    if (html.length === 0) return ''
+    return '\n' + html.join('\n')
+}
+
+/**
+ * @param {string} message
+ */
+module.exports.processMessage = message => {
+    let result = ''
+    let pending = ''
+    for (let i = 0; i < message.length; i++) {
+        const char = message.charAt(i)
+        pending += escapeHtml(char)
+        if (/\d/.test(char) && i !== (message.length - 1)) continue
+        // the order is *VERY* important!
+        if (MD_URL_REGEX.test(pending)) {
+            pending = pending.replace(MD_URL_REGEX, '<a href="$2">$1</a>')
+            result += pending
+            pending = ''
+        }
+        if (MD_BOLD_REGEX.test(pending)) {
+            pending = pending.replace(MD_BOLD_REGEX, '<b>$1</b>')
+            result += pending
+            pending = ''
+        }
+        if (MD_ITALIC_REGEX.test(pending)) {
+            const exec = MD_ITALIC_REGEX.exec(pending)
+            if (exec) {
+                let text = exec[2]
+                if (typeof text === 'undefined') text = exec[4]
+                pending = pending.replace(MD_ITALIC_REGEX, `<i>${text}</i>`)
+                result += pending
+                pending = ''
+            }
+        }
+        if (MD_UNDERLINE_REGEX.test(pending)) {
+            pending = pending.replace(MD_UNDERLINE_REGEX, '<u>$1</u>')
+            result += pending
+            pending = ''
+        }
+        if (MD_STRIKETHROUGH_REGEX.test(pending)) {
+            pending = pending.replace(MD_STRIKETHROUGH_REGEX, '<s>$1</s>')
+            result += pending
+            pending = ''
+        }
+    }
+    result += pending
+    return postProcessMessage(result)
+}

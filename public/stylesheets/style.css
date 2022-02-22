@@ -1,0 +1,123 @@
+body {
+  padding: 50px;
+  /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;*/
+  font-family: Whitney, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+h2.message-header>span.message-username {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.375rem;
+  color: #fff;
+  display: inline;
+  vertical-align: baseline;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  -ms-flex-negative: 0;
+}
+
+div.message {
+  margin-top: 1.0625rem;
+  min-height: 2.75rem;
+  padding-left: 72px;
+  padding-top: .125rem;
+  padding-bottom: .125rem;
+  padding-right: 48px !important;
+  position: relative;
+  word-wrap: break-word;
+  flex: 0 0 auto;
+}
+
+a, abbr, acronym, address, applet, big, blockquote, body, caption, cite, code, dd, del, dfn, div, dl, dt, em, fieldset, form, h1, h2, h3, h4, h5, h6, html, iframe, img, ins, kbd, label, legend, li, object, ol, p, pre, q, s, samp, small, span, strike, strong, table, tbody, td, tfoot, th, thead, tr, tt, ul, var {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-weight: inherit;
+  font-style: inherit;
+  font-size: 100%;
+  vertical-align: baseline;
+}
+
+div.contents {
+  margin-left: 0;
+  padding-left: 0;
+  position: static;
+  text-indent: 0;
+}
+
+h2.message-header {
+  overflow: hidden;
+  display: block;
+  position: relative;
+  line-height: 1.375rem;
+  min-height: 1.375rem;
+  color: #72767d;
+  white-space: break-spaces;
+}
+
+h2.message-header>span.message-timestamp {
+  font-size: 0.75rem;
+  line-height: 1.375rem;
+  color: #72767d;
+  vertical-align: baseline;
+}
+
+i.separator {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+div.contents>div.message-content {
+  user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  -webkit-user-select: text;
+  margin-left: -72px;
+  padding-left: 72px;
+  overflow: hidden;
+  position: relative;
+  font-size: 1rem;
+  line-height: 1.375rem;
+  white-space: break-spaces;
+  word-wrap: break-word;
+  color: #dcddde;
+  font-weight: 400;
+  outline: 0;
+}
+
+span.bot {
+  line-height: .9375rem;
+  position: relative;
+  font-weight: 500;
+  height: .9375rem;
+  padding: 0 .275rem;
+  margin-top: .075em;
+  border-radius: .1875rem;
+  margin-left: .25rem;
+  top: .1rem;
+  background-color: hsl(235, 85.6%, 64.7%);
+  color: #fff;
+  font-size: .625rem;
+  text-transform: uppercase;
+  vertical-align: top;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  text-indent: 0;
+}
+
+img {
+  max-width: 40%;
+}
+
+img.emoji {
+  height: 1.2em;
+  width: 1.2em;
+  margin: 0 .05em 0 .1em;
+  vertical-align: -0.1em;
+}
