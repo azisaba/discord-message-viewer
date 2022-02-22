@@ -17,6 +17,9 @@ const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;')
 
+const escapeHtml2 = module.exports.escapeHtml = unsafe => escapeHtml(unsafe)
+    .replaceAll('`', '&#96;')
+
 const postProcessMessage = message => {
     if (MD_CODE4_REGEX.test(message)) {
         message = message.replace(MD_CODE4_REGEX, '<div class="code">$2</div>')
@@ -123,7 +126,7 @@ module.exports.processMessage = (message, results) => {
                 const userId = exec[2]
                 const msg = results.find((e) => e.author_id === userId)
                 if (msg) {
-                    result += `<span class="mention" title="${escapeHtml(msg.author_name)}#${msg.author_discriminator} (ID: ${userId})">@${escapeHtml(msg.author_name)}</span>`
+                    result += `<span class="mention" title="${escapeHtml2(msg.author_name)}#${msg.author_discriminator} (ID: ${userId})">@${escapeHtml(msg.author_name)}</span>`
                 } else {
                     result += `<span class="mention" title="(ID: ${userId})">${pending}</span>`
                 }
