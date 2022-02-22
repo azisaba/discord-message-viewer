@@ -27,7 +27,7 @@ router.get('/messages/:table/:channel_id', function(req, res) {
   if (!/^[0-9]+$/.test(String(req.params.channel_id))) {
     return res.status(400).send({ error: "invalid channel id" })
   }
-  query(`SELECT * FROM ${String(req.params.table)} WHERE channel_id = ?`, String(req.params.channel_id)).then(async data => {
+  query(`SELECT * FROM \`${String(req.params.table)}\` WHERE channel_id = ?`, String(req.params.channel_id)).then(async data => {
     const results = data.results.sort((a, b) => a.created_timestamp - b.created_timestamp)
     const messageIds = results.map((e) => e.message_id).filter((e, i, a) => a.indexOf(e) === i)
     if (messageIds.length > 0) {
