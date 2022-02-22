@@ -48,7 +48,7 @@ module.exports.processAttachments = attachments => {
     const html = []
     attachments.forEach((attachment) => {
         if (attachment.url.endsWith('.png') === true) {
-            html.push(`<img src="data:image/png;base64,${Buffer.from(attachment.data).toString('base64')}" alt="Image" />`)
+            html.push(`<a href="/attachments/${attachment.attachment_id}"><img src="data:image/png;base64,${Buffer.from(attachment.data).toString('base64')}" alt="Image" /></a>`)
         } else {
             const split = attachment.url.split('/')
             const fileName = split[split.length - 1]
