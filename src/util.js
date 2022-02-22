@@ -2,7 +2,7 @@ const MD_URL_REGEX = /\[(.*?)]\((.*?)\)/g
 const MD_BOLD_REGEX = /\*\*(.*?)\*\*/g
 const MD_ITALIC_REGEX = /(\*(.*?)\*)|(_(.*?)_)/g
 const MD_UNDERLINE_REGEX = /__(.*?)__/g
-const MD_STRIKETHROUGH_REGEX = /~~(.*?)~~/g
+const MD_STRIKETHROUGH_REGEX = /~~([^]*?)~~/g
 const URL_REGEX = /(https?:\/\/.+?(?=\s|$))/g
 const USER_MENTION_REGEX = /(&lt;@!?(\d+)&gt;)/
 const MD_CODE1_REGEX = /`(.+?)`/
