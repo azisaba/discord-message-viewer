@@ -25,7 +25,7 @@ const postProcessMessage = message => {
 }
 
 module.exports.getContentTypeFromExtension = o => {
-    const s = String(o)
+    const s = String(o).toLowerCase()
     if (s.endsWith('.png')) return 'image/png'
     if (s.endsWith('.jpeg')) return 'image/jpeg'
     if (s.endsWith('.jpg')) return 'image/jpg'
@@ -47,7 +47,7 @@ module.exports.getContentTypeFromExtension = o => {
 module.exports.processAttachments = attachments => {
     const html = []
     attachments.forEach((attachment) => {
-        if (attachment.url.endsWith('.png') === true) {
+        if (attachment.url.toLowerCase().endsWith('.png') === true) {
             html.push(`<a href="/attachments/${attachment.attachment_id}"><img src="data:image/png;base64,${Buffer.from(attachment.data).toString('base64')}" alt="Image" /></a>`)
         } else {
             const split = attachment.url.split('/')
