@@ -4,6 +4,12 @@ block head
   link(rel='stylesheet', href='/stylesheets/index.css')
 
 block content
+  div.header
+    a(href="/messages/list") &lt; チャンネル一覧に戻る
+    h2.channel-name.
+      サーバー名: #[span.code= data[0].guild_name] (ID: #[span.code= data[0].guild_id])
+    h2.channel-name.
+      チャンネル名: #[span.code= data[0].channel_name] (ID: #[span.code= data[0].channel_id])
   each val in data
     div.message
       div.contents

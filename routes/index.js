@@ -3,16 +3,26 @@ const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 
-router.get('/messages/list', function(req, res) {
-  query('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', String(process.env.DB_NAME)).then(async data => {
-    const tables = []
-    for (let table of data.results.map((e) => e.table_name)) {
+const getChannels = async data => {
+  const promises = []
+  const tables = []
+  for (let table of data.results.map((e) => e.table_name)) {
+    const promise = query('SELECT DISTINCT `channel_name`, `channel_id` FROM `' + table + '`').catch(() => ({results:[]})).then(data => {
       const channels = {}
-      !(await query('SELECT `channel_name`, `channel_id` FROM `' + table + '`').catch(() => ({results:[]}))).results.forEach((e) => {
+      data.results.forEach((e) => {
         channels[e.channel_id] = e.channel_name
       })
       tables.push({ name: table, channels: Object.keys(channels).map((id) => ({ id, name: channels[id] })) })
-    }
+    })
+    promises.push(promise)
+  }
+  await Promise.all(promises)
+  return tables
+}
+
+router.get('/messages/list', async (req, res) => {
+  query('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', String(process.env.DB_NAME)).then(async data => {
+    const tables = await getChannels(data)
     res.render('list', { tables });
   }).catch(e => {
     console.error(e.stack || e)
@@ -20,7 +30,7 @@ router.get('/messages/list', function(req, res) {
   })
 })
 
-router.get('/messages/:table/:channel_id', function(req, res) {
+router.get('/messages/:table/:channel_id', async (req, res) => {
   if (!/^[a-zA-Z0-9_\-]+$/.test(String(req.params.table))) {
     return res.status(400).send({ error: "invalid table name" })
   }
@@ -46,7 +56,7 @@ router.get('/messages/:table/:channel_id', function(req, res) {
   })
 })
 
-router.get('/attachments/:attachment_id', function(req, res) {
+router.get('/attachments/:attachment_id', async (req, res) => {
   if (!/^[0-9]+$/.test(String(req.params.attachment_id))) {
     return res.status(400).send({ error: "invalid attachment id" })
   }
