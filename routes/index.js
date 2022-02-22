@@ -3,7 +3,7 @@ const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 
-router.get('/messages/:table/:channel_id', function(req, res, next) {
+router.get('/messages/:table/:channel_id', function(req, res) {
   if (!/^[a-zA-Z_0-9]+$/.test(String(req.params.table))) {
     return res.status(400).send({ error: "invalid table name" })
   }
@@ -29,7 +29,7 @@ router.get('/messages/:table/:channel_id', function(req, res, next) {
   })
 })
 
-router.get('/attachments/:attachment_id', function(req, res, next) {
+router.get('/attachments/:attachment_id', function(req, res) {
   if (!/^[0-9]+$/.test(String(req.params.attachment_id))) {
     return res.status(400).send({ error: "invalid attachment id" })
   }
