@@ -3,6 +3,23 @@ const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 
+router.get('/messages/list', function(req, res) {
+  query('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', String(process.env.DB_NAME)).then(async data => {
+    const tables = []
+    for (let table of data.results.map((e) => e.table_name)) {
+      const channels = {}
+      !(await query('SELECT `channel_name`, `channel_id` FROM `' + table + '`').catch(() => ({results:[]}))).results.forEach((e) => {
+        channels[e.channel_id] = e.channel_name
+      })
+      tables.push({ name: table, channels: Object.keys(channels).map((id) => ({ id, name: channels[id] })) })
+    }
+    res.render('list', { tables });
+  }).catch(e => {
+    console.error(e.stack || e)
+    res.status(500).send({ error: 'something_went_wrong' })
+  })
+})
+
 router.get('/messages/:table/:channel_id', function(req, res) {
   if (!/^[a-zA-Z_0-9]+$/.test(String(req.params.table))) {
     return res.status(400).send({ error: "invalid table name" })

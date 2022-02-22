@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  ul
+    each table in tables
+      li= table.name
+        ul
+          each channel in table.channels
+            li
+              a(href="/messages/" + table.name + "/" + channel.id)= channel.name

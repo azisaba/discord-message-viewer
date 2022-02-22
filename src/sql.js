@@ -9,25 +9,11 @@ const pool = createPool({
     charset: 'utf8mb4',
 })
 
-module.exports.getConnection = /* async */ () => {
-    return new Promise((resolve, reject) =>
-        pool.getConnection((err, connection) => {
-                if (err) {
-                    debug(err)
-                    return reject(err)
-                }
-                resolve(connection)
-            }
-        )
-    )
-}
-
 module.exports.query = (sql, ...values) => {
     return new Promise((resolve, reject) => {
         debug(sql, values)
         pool.query(sql, values, (error, results, fields) => {
             if (error) {
-                debug(error)
                 return reject(error)
             }
             resolve({ results, fields })
