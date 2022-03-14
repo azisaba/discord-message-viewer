@@ -2,6 +2,7 @@ extends layout
 
 block head
   link(rel='stylesheet', href='/stylesheets/index.css')
+  meta(name='description', content=`${data[0].channel_name} / ${data[0].guild_name}`)
 
 block content
   div.header
