@@ -10,6 +10,26 @@ const MD_CODE2_REGEX = /``(.+?)``/
 const MD_CODE3_REGEX = /```([^]+?)```/
 const MD_CODE4_REGEX = /```(.*?)[\n ]([^]+?)```/
 
+const getContentTypeFromExtension = module.exports.getContentTypeFromExtension = o => {
+    const s = String(o).toLowerCase()
+    if (s.endsWith('.png')) return 'image/png'
+    if (s.endsWith('.jpeg')) return 'image/jpeg'
+    if (s.endsWith('.jpg')) return 'image/jpg'
+    if (s.endsWith('.gif')) return 'image/gif'
+    if (s.endsWith('.mpeg') || s.endsWith('.mp3')) return 'audio/mpeg'
+    if (s.endsWith('.mp4')) return 'video/mp4'
+    if (s.endsWith('.midi') || s.endsWith('.mid')) return 'audio/midi'
+    if (s.endsWith('.pdf')) return 'application/pdf'
+    if (s.endsWith('.txt')) return 'text/plain'
+    if (s.endsWith('.wav')) return 'audio/wav'
+    if (s.endsWith('.weba')) return 'audio/webm'
+    if (s.endsWith('.webm')) return 'video/webm'
+    if (s.endsWith('.webp')) return 'image/webp'
+    if (s.endsWith('.csv')) return 'text/csv'
+    if (s.endsWith('.css')) return 'text/css'
+    return 'application/octet-stream'
+}
+
 const escapeHtml = module.exports.escapeHtml = unsafe => unsafe
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -35,31 +55,11 @@ const postProcessMessage = message => {
     }
     message.match(URL_REGEX)?.forEach((url) => {
         message = message.replace(url, `<a href="${encodeURI(url)}">${escapeHtml(url)}</a>`)
-        if (url.endsWith(".png")) {
+        if (getContentTypeFromExtension(url).startsWith('image/')) {
             message += `\n<a href="${encodeURI(url)}"><img src="${encodeURI(url)}" alt="Image"/></a>`
         }
     })
     return message
-}
-
-module.exports.getContentTypeFromExtension = o => {
-    const s = String(o).toLowerCase()
-    if (s.endsWith('.png')) return 'image/png'
-    if (s.endsWith('.jpeg')) return 'image/jpeg'
-    if (s.endsWith('.jpg')) return 'image/jpg'
-    if (s.endsWith('.gif')) return 'image/gif'
-    if (s.endsWith('.mpeg') || s.endsWith('.mp3')) return 'audio/mpeg'
-    if (s.endsWith('.mp4')) return 'video/mp4'
-    if (s.endsWith('.midi') || s.endsWith('.mid')) return 'audio/midi'
-    if (s.endsWith('.pdf')) return 'application/pdf'
-    if (s.endsWith('.txt')) return 'text/plain'
-    if (s.endsWith('.wav')) return 'audio/wav'
-    if (s.endsWith('.weba')) return 'audio/webm'
-    if (s.endsWith('.webm')) return 'video/webm'
-    if (s.endsWith('.webp')) return 'image/webp'
-    if (s.endsWith('.csv')) return 'text/csv'
-    if (s.endsWith('.css')) return 'text/css'
-    return 'application/octet-stream'
 }
 
 module.exports.processAttachments = attachments => {
