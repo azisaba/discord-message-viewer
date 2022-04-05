@@ -2,6 +2,7 @@ const express = require('express')
 const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
+const MESSAGES_PER_PAGE = 250
 
 const getChannels = async data => {
   const promises = []
@@ -37,19 +38,35 @@ router.get('/messages/:table/:channel_id', async (req, res) => {
   if (!/^[0-9]+$/.test(String(req.params.channel_id))) {
     return res.status(400).send({ error: "invalid channel id" })
   }
-  query(`SELECT * FROM \`${String(req.params.table)}\` WHERE channel_id = ?`, String(req.params.channel_id)).then(async data => {
-    const results = data.results.sort((a, b) => a.created_timestamp - b.created_timestamp)
-    const messageIds = results.map((e) => e.message_id).filter((e, i, a) => a.indexOf(e) === i)
+  let page = parseInt((req.query || {})['page'] || 0)
+  if (page < 0) page = 0
+  const maxEntries = await query(`SELECT COUNT(*) FROM \`${String(req.params.table)}\` WHERE channel_id = ?`, String(req.params.channel_id))
+      .then(data => data.results[0]['COUNT(*)'])
+      .catch(e => {
+        console.error(e.stack || e)
+        res.status(404).send({ error: 'not_found' })
+        return -1
+      })
+  if (maxEntries === -1) return
+  if (maxEntries === 0) {
+    return res.status(404).send({ error: 'not_found' })
+  }
+  const maxPage = Math.floor(maxEntries / MESSAGES_PER_PAGE)
+  query(`SELECT * FROM \`${String(req.params.table)}\` WHERE channel_id = ? ORDER BY created_timestamp ASC LIMIT ?, ?`, String(req.params.channel_id), page * MESSAGES_PER_PAGE, MESSAGES_PER_PAGE).then(async data => {
+    if (data.results.length === 0) {
+      return res.status(404).send({ error: 'not_found' })
+    }
+    const messageIds = data.results.map((e) => e.message_id).filter((e, i, a) => a.indexOf(e) === i)
     if (messageIds.length > 0) {
       const where = messageIds.map(() => '`message_id` = ?').join(' OR ')
       const imageAttachments = (await query(`SELECT * FROM \`attachments\` WHERE (${where}) AND LOWER(\`url\`) LIKE "%.png"`, ...messageIds)).results
       const fileAttachments = (await query(`SELECT \`message_id\`, \`attachment_id\`, \`url\` FROM \`attachments\` WHERE (${where}) AND LOWER(\`url\`) NOT LIKE "%.png"`, ...messageIds)).results
-      results.forEach((e) => e.attachments = [...imageAttachments, ...fileAttachments].filter((attachment) => attachment.message_id === e.message_id))
+      data.results.forEach((e) => e.attachments = [...imageAttachments, ...fileAttachments].filter((attachment) => attachment.message_id === e.message_id))
     }
-    results.forEach((e) => e.content = processMessage(e.content, results))
-    results.forEach((e) => e.content += processAttachments(e.attachments))
-    results.forEach((e) => e.content = e.content.replace(/^\n?(.*)\n?$/, "$1"))
-    res.render('index', { data: results });
+    data.results.forEach((e) => e.content = processMessage(e.content, data.results))
+    data.results.forEach((e) => e.content += processAttachments(e.attachments))
+    data.results.forEach((e) => e.content = e.content.replace(/^\n?(.*)\n?$/, "$1"))
+    res.render('index', { data: data.results, page, maxPage });
   }).catch(e => {
     console.error(e.stack || e)
     res.status(404).send({ error: 'not_found' })

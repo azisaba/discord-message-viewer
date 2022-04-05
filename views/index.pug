@@ -1,5 +1,29 @@
 extends layout
 
+mixin page-control
+  div.page-control.monospaced
+    if 0 < page
+      a(href=`?page=0`) <<
+      a(href=`?page=${page - 1}`).extended-margin-right <
+    else
+      span <<
+      span.extended-margin-right <
+    if 0 < page - 2
+      a(href=`?page=${page - 2}`)= `${page - 2}`
+    if 0 < page - 1
+      a(href=`?page=${page - 1}`)= `${page - 1}`
+    span= `${page}`
+    if maxPage > page + 1
+      a(href=`?page=${page + 1}`)= `${page + 1}`
+    if maxPage > page + 2
+      a(href=`?page=${page + 2}`)= `${page + 2}`
+    if maxPage > page
+      a(href=`?page=${page + 1}`).extended-margin-left >
+      a(href=`?page=${maxPage}`) >>
+    else
+      span.extended-margin-left >
+      span >>
+
 block head
   link(rel='stylesheet', href='/stylesheets/index.css')
   meta(name='description', content=`${data[0].channel_name} / ${data[0].guild_name}`)
@@ -11,6 +35,7 @@ block content
       サーバー名: #[span.code= data[0].guild_name] (ID: #[span.code= data[0].guild_id])
     h2.channel-name.
       チャンネル名: #[span.code= data[0].channel_name] (ID: #[span.code= data[0].channel_id])
+  +page-control
   each val in data
     div.message
       div.contents
@@ -21,3 +46,4 @@ block content
           i.separator
           span.message-timestamp= (new Date(val.created_timestamp)).toLocaleString()
         div.message-content !{val.content}
+  +page-control

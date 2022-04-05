@@ -151,3 +151,23 @@ div.header>h2.channel-name {
   font-family: Consolas, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono,
       Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Monaco, Courier New, Courier, monospace;
 }
+
+div.page-control {
+  margin: 20px 0 20px 150px;
+}
+
+div.page-control>* {
+  margin-left: 8px;
+  margin-right: 8px;
+  text-decoration: none;
+  font-size: 20px;
+}
+
+div.page-control>*.extended-margin-right {
+  margin-right: 12px;
+}
+
+div.page-control>*.extended-margin-left {
+  margin-left: 12px;
+}
+
