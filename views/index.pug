@@ -8,14 +8,14 @@ mixin page-control
     else
       span <<
       span.extended-margin-right <
-    if 0 <= page - 2
+    if 0 < page - 1
       a(href=`?page=${page - 2}`)= `${page + 1 - 2}`
-    if 0 <= page - 1
+    if 0 < page
       a(href=`?page=${page - 1}`)= `${page + 1 - 1}`
     span= `${page + 1}`
-    if maxPage > page + 1
+    if maxPage > page
       a(href=`?page=${page + 1}`)= `${page + 1 + 1}`
-    if maxPage > page + 2
+    if maxPage > page + 1
       a(href=`?page=${page + 2}`)= `${page + 1 + 2}`
     if maxPage > page
       a(href=`?page=${page + 1}`).extended-margin-left >
