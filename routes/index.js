@@ -3,6 +3,19 @@ const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 const MESSAGES_PER_PAGE = 250
+const MAX_ATTACHMENTS_CACHE_SIZE = 10
+const attachmentsCache = []
+let attachmentsCacheIndex = 0
+
+const pushAttachmentToCache = (attachment) => {
+  if (MAX_ATTACHMENTS_CACHE_SIZE === 0) return
+  attachmentsCache[attachmentsCacheIndex++ % MAX_ATTACHMENTS_CACHE_SIZE] = attachment
+}
+
+const findAttachmentFromCache = (id) => {
+  if (attachmentsCache.length === 0) return null
+  return attachmentsCache.find((e) => e.attachment_id === id)
+}
 
 const getChannels = async data => {
   const promises = []
@@ -77,8 +90,21 @@ router.get('/attachments/:attachment_id', async (req, res) => {
   if (!/^[0-9]+$/.test(String(req.params.attachment_id))) {
     return res.status(400).send({ error: "invalid attachment id" })
   }
+  const cached = findAttachmentFromCache(String(req.params.attachment_id))
+  if (cached) {
+    const split = cached.url.split('/')
+    const fileName = split[split.length - 1]
+    res.writeHead(200, {
+      'Content-Type': getContentTypeFromExtension(cached.url),
+      'Content-disposition': `filename=${fileName}`,
+      'Content-Length': cached.data.length,
+    })
+    res.end(cached.data)
+    return
+  }
   query(`SELECT * FROM attachments WHERE attachment_id = ? LIMIT 1`, String(req.params.attachment_id)).then(async data => {
     const attachment = data.results[0]
+    pushAttachmentToCache(attachment)
     const split = attachment.url.split('/')
     const fileName = split[split.length - 1]
     res.writeHead(200, {
