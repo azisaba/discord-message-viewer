@@ -3,7 +3,7 @@ const { query } = require('../src/sql')
 const { processMessage, processAttachments, getContentTypeFromExtension } = require('../src/util')
 const router = express.Router()
 const MESSAGES_PER_PAGE = 250
-const MAX_ATTACHMENTS_CACHE_SIZE = 10
+const MAX_ATTACHMENTS_CACHE_SIZE = process.env.MAX_ATTACHMENTS_CACHE_SIZE || 10
 const attachmentsCache = []
 let attachmentsCacheIndex = 0
 
