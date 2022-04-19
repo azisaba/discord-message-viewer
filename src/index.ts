@@ -1,11 +1,25 @@
-#!/usr/bin/env node
-
-/**
- * Module dependencies.
- */
-const app = require('../app')
+import app from './app'
 const debug = require('debug')('discord-message-viewer:server')
 const http = require('http')
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+const normalizePort = (val: string): false | number | string => {
+  const port = parseInt(val, 10)
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
 
 /**
  * Get port from environment and store in Express.
@@ -27,30 +41,10 @@ server.on('error', onError);
 server.on('listening', onListening);
 
 /**
- * Normalize a port into a number, string, or false.
- */
-
-function normalizePort(val) {
-  const port = parseInt(val, 10)
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-}
-
-/**
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: any) {
   if (error.syscall !== 'listen') {
     throw error;
   }
