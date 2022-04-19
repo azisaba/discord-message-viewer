@@ -63,6 +63,7 @@ export const putAttachmentMetadata = async (name: string, attachment: Attachment
 }
 
 export const loadAttachmentMessageJson = async (): Promise<{ [messageId: string]: Array<string> }> => {
+  await ensureDirectoryExists()
   let json: { [messageId: string]: Array<string> } = {}
   if (await isExists(MESSAGE_ATTACHMENT_JSON)) {
     json = JSON.parse(await fs.readFile(MESSAGE_ATTACHMENT_JSON).then(buf => buf.toString('utf-8')))
