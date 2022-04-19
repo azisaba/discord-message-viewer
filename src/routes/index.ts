@@ -87,8 +87,10 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
     }
     if (messageIds.length > 0) {
       const attachments = await queryAttachmentsByMessageIds(messageIds)
-      if (attachments.length > 0) {
-        for (const e of messages) {
+      for (const e of messages) {
+        if (attachments.length === 0) {
+          await putAttachmentIdByMessageId(e.message_id, [])
+        } else {
           e.attachments = attachments.filter((attachment) => attachment.message_id === e.message_id)
           await putAttachmentIdByMessageId(e.message_id, e.attachments.map((attachment) => attachment.attachment_id))
         }
