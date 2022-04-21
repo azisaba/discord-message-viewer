@@ -3,7 +3,7 @@ import { improveAttachments } from './util'
 
 export const INVALID_FILENAME_REGEX = /[^a-z\d_\-.]/ig
 export const DATA_DIRECTORY = `.data`
-export const MESSAGE_ATTACHMENT_JSON = `${DATA_DIRECTORY}/message_attachments.json`
+export const CHANNELS_DIRECTORY = `${DATA_DIRECTORY}/channels`
 export const ATTACHMENTS_DIRECTORY = `${DATA_DIRECTORY}/attachments`
 export const ATTACHMENTS_METADATA_DIRECTORY = `${DATA_DIRECTORY}/attachments_metadata`
 
@@ -12,6 +12,7 @@ export const filterIllegalCharsForFile = (name: string) => name.replace(INVALID_
 export const ensureDirectoryExists = async () => {
   await fs.mkdir(ATTACHMENTS_DIRECTORY, { recursive: true })
   await fs.mkdir(ATTACHMENTS_METADATA_DIRECTORY, { recursive: true })
+  await fs.mkdir(CHANNELS_DIRECTORY, { recursive: true })
 }
 
 export const isExists = (file: string) =>
@@ -48,7 +49,7 @@ export const getAttachmentMetadata = async (name: string): Promise<AttachmentWit
   }
 }
 
-export const putAttachmentMetadata = async (name: string, attachment: AttachmentWithFilename): Promise<void> => {
+export const putAttachmentMetadata = async (name: string, attachment: Attachment): Promise<void> => {
   await ensureDirectoryExists()
   const id = filterIllegalCharsForFile(String(name))
   await fs.writeFile(
@@ -62,17 +63,17 @@ export const putAttachmentMetadata = async (name: string, attachment: Attachment
   )
 }
 
-export const loadAttachmentMessageJson = async (): Promise<{ [messageId: string]: Array<string> }> => {
+export const loadMessageJson = async (channelId: string): Promise<{ [messageId: string]: Array<string> }> => {
   await ensureDirectoryExists()
   let json: { [messageId: string]: Array<string> } = {}
-  if (await isExists(MESSAGE_ATTACHMENT_JSON)) {
-    json = JSON.parse(await fs.readFile(MESSAGE_ATTACHMENT_JSON).then(buf => buf.toString('utf-8')))
+  if (await isExists(`${CHANNELS_DIRECTORY}/${channelId}.json`)) {
+    json = JSON.parse(await fs.readFile(`${CHANNELS_DIRECTORY}/${channelId}.json`).then(buf => buf.toString('utf-8')))
   }
   return json
 }
 
-export const putAttachmentIdByMessageId = async (messageId: string, attachmentIds: Array<string>): Promise<void> => {
-  const data = await loadAttachmentMessageJson()
+export const putMessageId = async (channelId: string, messageId: string, attachmentIds: Array<string>): Promise<void> => {
+  const data = await loadMessageJson(channelId)
   data[messageId] = attachmentIds
-  await fs.writeFile(MESSAGE_ATTACHMENT_JSON, JSON.stringify(data))
+  await fs.writeFile(`${CHANNELS_DIRECTORY}/${channelId}.json`, JSON.stringify(data))
 }

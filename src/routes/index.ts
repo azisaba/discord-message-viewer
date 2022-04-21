@@ -4,8 +4,8 @@ import { processMessage, processAttachments, getContentTypeFromExtension } from 
 import {
   filterIllegalCharsForFile,
   getAttachmentData,
-  getAttachmentMetadata, loadAttachmentMessageJson,
-  putAttachmentData, putAttachmentIdByMessageId,
+  getAttachmentMetadata, loadMessageJson,
+  putAttachmentData, putMessageId,
   putAttachmentMetadata,
 } from '../data'
 
@@ -66,13 +66,14 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
     if (messages.length === 0) {
       return res.status(404).send({ error: 'not_found' })
     }
-    const messageIds = new Array<string>()
-    const attachmentMessageJson = await loadAttachmentMessageJson()
+    const channelId = messages[0].channel_id
+    const messagesToFetchAttachments = new Array<string>()
+    const cachedMessageAttachments = await loadMessageJson(channelId)
     for (const msg of messages) {
       msg.attachments = []
-      const attachmentIds = attachmentMessageJson[msg.message_id]
+      const attachmentIds = cachedMessageAttachments[msg.message_id]
       if (attachmentIds === null || typeof attachmentIds === 'undefined') {
-        messageIds.push(msg.message_id)
+        messagesToFetchAttachments.push(msg.message_id)
         continue
       }
       if (attachmentIds.length === 0) {
@@ -85,14 +86,21 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
         }
       }
     }
-    if (messageIds.length > 0) {
-      const attachments = await queryAttachmentsByMessageIds(messageIds)
+    if (messagesToFetchAttachments.length > 0) {
+      const attachments = await queryAttachmentsByMessageIds(messagesToFetchAttachments)
+      // ^ does not include attachment data, only metadata is present
       for (const e of messages) {
         if (attachments.length === 0) {
-          await putAttachmentIdByMessageId(e.message_id, [])
+          await putMessageId(channelId, e.message_id, [])
         } else {
           e.attachments = attachments.filter((attachment) => attachment.message_id === e.message_id)
-          await putAttachmentIdByMessageId(e.message_id, e.attachments.map((attachment) => attachment.attachment_id))
+          for (const attachment of e.attachments) {
+            const cached = await getAttachmentMetadata(attachment.attachment_id)
+            if (cached == null) {
+              await putAttachmentMetadata(attachment.attachment_id, attachment)
+            }
+          }
+          await putMessageId(channelId, e.message_id, e.attachments.map((attachment) => attachment.attachment_id))
         }
       }
     }
