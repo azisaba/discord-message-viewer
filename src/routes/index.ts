@@ -114,23 +114,21 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
   })
 })
 
-router.get('/attachments/:attachment_id/:filename', async (req: Request, res: Response) => {
-  if (!/^\d+$/.test(String(req.params.attachment_id))) {
-    return res.status(404).send({ error: 'not_found' })
-  }
+router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: Response) => {
+  const attachmentId = String(req.params.attachment_id)
   try {
     const paramFilename = filterIllegalCharsForFile(String(req.params.filename))
-    let attachment = await getAttachmentMetadata(String(req.params.attachment_id))
+    let attachment = await getAttachmentMetadata(attachmentId)
     if (!attachment) {
-      attachment = await queryAttachment(String(req.params.attachment_id), true)
+      attachment = await queryAttachment(attachmentId, true)
       if (attachment) {
-        await putAttachmentMetadata(String(req.params.attachment_id), attachment)
+        await putAttachmentMetadata(attachmentId, attachment)
       }
     }
     if (!attachment) {
       return res.status(404).send({ error: 'not_found' })
     }
-    if (filterIllegalCharsForFile(attachment.filename) !== paramFilename) {
+    if (!(filterIllegalCharsForFile(attachment.filename) === paramFilename || (typeof req.params.filename === 'undefined' && filterIllegalCharsForFile(attachment.filename).length === 0))) {
       // attachment does not exist or filename does not match
       return res.status(404).send({ error: 'not_found' })
     }

@@ -145,12 +145,14 @@ export const processMessage = (message: string, results: any[]) => {
 export const improveAttachments = (...attachments: Array<Attachment>): Array<AttachmentWithFilename> => {
   const mapped = attachments.map((e) => e as AttachmentWithFilename)
   mapped.forEach(attachment => {
-    if ((attachment.message_id !== '0' && !attachment.message_id) || !attachment.attachment_id || !attachment.url || !attachment.proxy_url) {
+    if ((attachment.message_id !== '0' && !attachment.message_id) || !attachment.attachment_id) {
       throw new Error('invalid attachment: ' + JSON.stringify(attachment))
     }
     const split = attachment.url?.split('/')
     if (split && split.length > 0) {
       attachment.filename = split[split.length - 1]
+    } else {
+      attachment.filename = ''
     }
   })
   return mapped
