@@ -1,5 +1,7 @@
 import { filterIllegalCharsForFile } from './data'
 
+import { randomBytes } from 'crypto'
+
 export const MD_URL_REGEX = /\[(.*?)]\((.*?)\)/g
 export const MD_BOLD_REGEX = /\*\*(.*?)\*\*/g
 export const MD_ITALIC_REGEX = /(\*(.*?)\*)|(_(.*?)_)/g
@@ -157,3 +159,12 @@ export const improveAttachments = (...attachments: Array<Attachment>): Array<Att
   })
   return mapped
 }
+
+export const generateHexToken = (maxLen: number) => new Promise((resolve, reject) => {
+  randomBytes(maxLen / 2, (err, buffer) => {
+    if (err !== null) {
+      return reject(err)
+    }
+    resolve(buffer.toString('hex'))
+  })
+});

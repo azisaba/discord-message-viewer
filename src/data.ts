@@ -6,6 +6,7 @@ export const DATA_DIRECTORY = `.data`
 export const CHANNELS_DIRECTORY = `${DATA_DIRECTORY}/channels`
 export const ATTACHMENTS_DIRECTORY = `${DATA_DIRECTORY}/attachments`
 export const ATTACHMENTS_METADATA_DIRECTORY = `${DATA_DIRECTORY}/attachments_metadata`
+export const UPLOAD_TEMP_DIRECTORY = `${DATA_DIRECTORY}/uploads_temp`
 
 export const filterIllegalCharsForFile = (name: string) => name.replace(INVALID_FILENAME_REGEX, '_')
 

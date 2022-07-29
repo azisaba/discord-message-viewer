@@ -5,6 +5,7 @@ import path from 'path'
 import createError from 'http-errors'
 import cookieParser from 'cookie-parser'
 import { router as indexRouter } from './routes/index'
+import { router as uploadRouter } from './routes/upload'
 
 const debug = require('debug')('discord-message-viewer:app')
 query("SELECT 1").catch((e: any) => {
@@ -26,8 +27,11 @@ app.use(logger('dev', {
     }
   }
 }))
-app.use(express.json())
+
+app.use('/', uploadRouter)
+
 app.use(express.urlencoded({ extended: false }))
+app.use(express.json())
 app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../public')))
 
