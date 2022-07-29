@@ -11,6 +11,7 @@ export const router = express.Router()
 
 const uploadSecret = process.env.UPLOAD_SECRET
 const disableUpload = !uploadSecret || uploadSecret.length < 50
+const uploadForceSecure = process.env.UPLOAD_FORCE_SECURE_URL === 'true'
 
 router.post('/attachments/upload', upload.single('file'), async (req, res) => {
   if (disableUpload || uploadSecret !== req.headers.authorization) {
@@ -27,8 +28,7 @@ router.post('/attachments/upload', upload.single('file'), async (req, res) => {
     return res.status(400).send({ error: 'invalid_request' })
   }
   try {
-    console.log(host)
-    console.log(req.hostname)
+    const protocol = uploadForceSecure ? 'https' : req.protocol
     const attachmentId = `u${await generateHexToken(128)}`
     const buf = await fs.readFile(req.file.path)
     await query('INSERT INTO `attachments` (`attachment_id`, `url`, `data`) VALUES (?, ?, ?)', attachmentId, req.file.originalname, buf)
@@ -37,7 +37,7 @@ router.post('/attachments/upload', upload.single('file'), async (req, res) => {
       data: {
         attachment_id: attachmentId,
         filename: req.file.originalname,
-        url: `${req.protocol}://${host}/attachments/${attachmentId}/${req.file.originalname}`,
+        url: `${protocol}://${host}/attachments/${attachmentId}/${req.file.originalname}`,
       },
     })
   } catch (e) {
