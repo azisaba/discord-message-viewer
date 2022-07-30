@@ -29,7 +29,7 @@ router.post('/attachments/upload', upload.single('file'), async (req, res) => {
   }
   try {
     const protocol = uploadForceSecure ? 'https' : req.protocol
-    const attachmentId = `u${await generateHexToken(128)}`
+    const attachmentId = `u${await generateHexToken(35)}`
     const buf = await fs.readFile(req.file.path)
     await query('INSERT INTO `attachments` (`attachment_id`, `url`, `data`) VALUES (?, ?, ?)', attachmentId, req.file.originalname, buf)
     res.send({
