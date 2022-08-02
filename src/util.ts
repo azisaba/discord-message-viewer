@@ -24,7 +24,7 @@ export const getContentTypeFromExtension = (o: any) => {
   if (s.endsWith('.mp4')) return 'video/mp4'
   if (s.endsWith('.midi') || s.endsWith('.mid')) return 'audio/midi'
   if (s.endsWith('.pdf')) return 'application/pdf'
-  if (s.endsWith('.txt')) return 'text/plain'
+  if (s.endsWith('.txt')) return 'text/plain; charset=utf-8'
   if (s.endsWith('.wav')) return 'audio/wav'
   if (s.endsWith('.weba')) return 'audio/webm'
   if (s.endsWith('.webm')) return 'video/webm'
