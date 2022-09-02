@@ -23,7 +23,7 @@ const gunzip = (input: InputType): Promise<Buffer> => new Promise((resolve, reje
 })
 
 const unBzip2 = async (input: Buffer): Promise<Buffer> => {
-  const files = await decompress(input)
+  const files = await decompress(input, { plugins: [require('decompress-bzip2')()] })
   if (files.length === 0) {
     throw new Error('No files in bzip2 archive')
   }
