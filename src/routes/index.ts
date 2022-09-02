@@ -2,6 +2,7 @@ import { InputType, gunzip as gunzipCb } from 'node:zlib'
 import express from 'express'
 import { fetchAttachmentData, query, queryAttachment, queryAttachmentsByMessageIds } from '../sql'
 import { processMessage, processAttachments, getContentTypeFromExtension } from '../util'
+import decompress from 'decompress'
 import {
   filterIllegalCharsForFile,
   getAttachmentData,
@@ -20,6 +21,14 @@ const gunzip = (input: InputType): Promise<Buffer> => new Promise((resolve, reje
     resolve(result)
   })
 })
+
+const unBzip2 = async (input: Buffer): Promise<Buffer> => {
+  const files = await decompress(input)
+  if (files.length === 0) {
+    throw new Error('No files in bzip2 archive')
+  }
+  return files[0].data
+}
 
 export const router = express.Router()
 export const MESSAGES_PER_PAGE = 250
@@ -146,22 +155,42 @@ router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: R
       return res.status(404).send({ error: 'not_found' })
     }
 
-    const writeBody = async (body: Buffer) => {
+    const writeBody = async (body: Buffer, actuallyDecompressData: boolean = true) => {
+      // decompress data if necessary
       let newBody = body
       let newFilename = attachment!.filename
       if (doDecompress) {
-        newBody = await gunzip(body)
-        const idx = newFilename.lastIndexOf(".gz")
-        if (idx !== -1) {
-          newFilename = newFilename.substring(0, idx)
+        if (newFilename.endsWith('.bz2')) {
+          if (actuallyDecompressData) {
+            newBody = await unBzip2(newBody)
+          }
+          newFilename = newFilename.substring(0, newFilename.length - 4)
+        }
+        if (newFilename.endsWith('.gz')) {
+          if (actuallyDecompressData) {
+            newBody = await gunzip(newBody)
+          }
+          newFilename = newFilename.substring(0, newFilename.length - 3)
+        }
+        if (actuallyDecompressData) {
+          putAttachmentData(attachment!.attachment_id + '.__decompressed__', newBody)
+            .then(() => debug(`Cached decompressed attachment data for ${attachment!.attachment_id}`))
         }
       }
+
+      // actually write the response
       res.writeHead(200, {
         'Content-Type': getContentTypeFromExtension(newFilename),
         'Content-disposition': `filename=${newFilename}`,
         'Content-Length': newBody.length,
       })
       res.end(newBody)
+    }
+
+    const decompressedCached = await getAttachmentData(attachmentId + '.__decompressed__')
+    if (decompressedCached) {
+      // cached decompressed data
+      return writeBody(decompressedCached, false)
     }
 
     const cached = await getAttachmentData(attachment.attachment_id)
