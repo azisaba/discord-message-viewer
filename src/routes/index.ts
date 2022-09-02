@@ -1,3 +1,4 @@
+import { InputType, gunzip as gunzipCb } from 'node:zlib'
 import express from 'express'
 import { fetchAttachmentData, query, queryAttachment, queryAttachmentsByMessageIds } from '../sql'
 import { processMessage, processAttachments, getContentTypeFromExtension } from '../util'
@@ -8,6 +9,15 @@ import {
   putAttachmentData, putMessageId,
   putAttachmentMetadata,
 } from '../data'
+
+const gunzip = (input: InputType): Promise<Buffer> => new Promise((resolve, reject) => {
+  gunzipCb(input, (err, result) => {
+    if (err) {
+      return reject(err)
+    }
+    resolve(result)
+  })
+})
 
 export const router = express.Router()
 export const MESSAGES_PER_PAGE = 250
@@ -115,6 +125,7 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
 })
 
 router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: Response) => {
+  const doDecompress = String(req.query['decompress']) === 'true'
   const attachmentId = String(req.params.attachment_id)
   try {
     const paramFilename = filterIllegalCharsForFile(String(req.params.filename))
@@ -132,26 +143,35 @@ router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: R
       // attachment does not exist or filename does not match
       return res.status(404).send({ error: 'not_found' })
     }
+
+    const writeBody = async (body: Buffer) => {
+      let newBody = body
+      let newFilename = attachment!.filename
+      if (doDecompress) {
+        newBody = await gunzip(body)
+        const idx = newFilename.lastIndexOf(".gz")
+        if (idx !== -1) {
+          newFilename = newFilename.substring(0, idx)
+        }
+      }
+      res.writeHead(200, {
+        'Content-Type': getContentTypeFromExtension(newFilename),
+        'Content-disposition': `filename=${newFilename}`,
+        'Content-Length': newBody.length,
+      })
+      res.end(newBody)
+    }
+
     const cached = await getAttachmentData(attachment.attachment_id)
     if (cached) {
       // cached
-      res.writeHead(200, {
-        'Content-Type': getContentTypeFromExtension(attachment.url),
-        'Content-disposition': `filename=${attachment.filename}`,
-        'Content-Length': cached.length,
-      })
-      return res.end(cached)
+      return writeBody(cached)
     }
     // not cached
     const data = await fetchAttachmentData(attachment.attachment_id)
     if (data) {
       // cached
-      res.writeHead(200, {
-        'Content-Type': getContentTypeFromExtension(attachment.url),
-        'Content-disposition': `filename=${attachment.filename}`,
-        'Content-Length': data.length,
-      })
-      res.end(data)
+      await writeBody(data)
       await putAttachmentData(attachment.attachment_id, data)
     } else {
       // attachment disappeared for some reason
