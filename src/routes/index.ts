@@ -10,6 +10,8 @@ import {
   putAttachmentMetadata,
 } from '../data'
 
+const debug = require('debug')('discord-message-viewer:routes')
+
 const gunzip = (input: InputType): Promise<Buffer> => new Promise((resolve, reject) => {
   gunzipCb(input, (err, result) => {
     if (err) {
@@ -171,8 +173,8 @@ router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: R
     const data = await fetchAttachmentData(attachment.attachment_id)
     if (data) {
       // cached
+      putAttachmentData(attachment.attachment_id, data).then(() => debug(`Cached attachment data for ${attachment!.attachment_id}`))
       await writeBody(data)
-      await putAttachmentData(attachment.attachment_id, data)
     } else {
       // attachment disappeared for some reason
       res.status(404).send({ error: 'not_found' })
