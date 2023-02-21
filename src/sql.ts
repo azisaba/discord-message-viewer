@@ -3,7 +3,7 @@ import { improveAttachments } from './util'
 const debug = require('debug')('discord-message-viewer:sql')
 import { createPool } from 'mysql2'
 const pool = createPool({
-  connectionLimit: 10,
+  connectionLimit: 500,
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
