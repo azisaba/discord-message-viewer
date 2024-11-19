@@ -1,6 +1,6 @@
 import { InputType, gunzip as gunzipCb } from 'node:zlib'
 import express from 'express'
-import { fetchAttachmentData, query, queryAttachment, queryAttachmentsByMessageIds } from '../sql'
+import { query, queryAttachment, queryAttachmentsByMessageIds } from '../sql'
 import { processMessage, processAttachments, getContentTypeFromExtension } from '../util'
 import decompress from 'decompress'
 import {
@@ -50,7 +50,7 @@ const getChannels = async (tableNames: Array<string>) => {
   return tables
 }
 
-router.get('/messages/list', async (req: Request, res: Response) => {
+router.get('/messages/list', async (req: express.Request, res: express.Response) => {
   query('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', String(process.env.DB_NAME)).then(async data => {
     const tables = await getChannels(data.results.map((e: { table_name: string }) => e.table_name))
     tables.sort((a, b) => a.name.localeCompare(b.name))
@@ -61,7 +61,7 @@ router.get('/messages/list', async (req: Request, res: Response) => {
   })
 })
 
-router.get('/messages/:table/:channel_id', async (req: Request, res: Response) => {
+router.get('/messages/:table/:channel_id', async (req: express.Request, res: express.Response) => {
   if (!/^[a-zA-Z\d_\-]+$/.test(String(req.params.table))) {
     return res.status(400).send({ error: "invalid table name" })
   }
@@ -135,7 +135,7 @@ router.get('/messages/:table/:channel_id', async (req: Request, res: Response) =
   })
 })
 
-router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: Response) => {
+router.get('/attachments/:attachment_id/:filename?', async (req: express.Request, res: express.Response) => {
   const doDecompress = String(req.query['decompress']) === 'true'
   const attachmentId = String(req.params.attachment_id)
   try {
@@ -193,13 +193,14 @@ router.get('/attachments/:attachment_id/:filename?', async (req: Request, res: R
       return writeBody(decompressedCached, false)
     }
 
+    // try to get cached data
     const cached = await getAttachmentData(attachment.attachment_id)
     if (cached) {
       // cached
       return writeBody(cached)
     }
     // not cached
-    const data = await fetchAttachmentData(attachment.attachment_id)
+    const data = await fetch(attachment.url).then(res => res.blob()).then(blob => blob.arrayBuffer()).then(buffer => Buffer.from(buffer))
     if (data) {
       // cached
       putAttachmentData(attachment.attachment_id, data).then(() => debug(`Cached attachment data for ${attachment!.attachment_id}`))

@@ -1,8 +1,6 @@
-import { Request as ERequest, Response as EResponse, NextFunction as ENextFunction } from 'express'
+import { NextFunction as ENextFunction } from 'express'
 
 declare global {
-  type Request = ERequest
-  type Response = EResponse
   type NextFunction = ENextFunction
 
   type QueryResult = {
